@@ -1,0 +1,7 @@
+# Core data & pipeline dependencies.
+# Training/serving dependencies are added incrementally in later phases.
+pandas>=2.0
+numpy>=1.24
+pyyaml>=6.0
+kaggle>=1.6
+dvc[gdrive]>=3.0

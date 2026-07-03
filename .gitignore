@@ -1,0 +1,49 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+
+# --- Virtual environments ---
+.venv/
+venv/
+env/
+
+# --- Secrets & credentials (NEVER commit) ---
+.env
+.env.*
+!.env.example
+# Kaggle API token
+kaggle.json
+.kaggle/
+# Google Drive service account / OAuth credentials
+gdrive-service-account.json
+**/service-account*.json
+credentials.json
+client_secrets.json
+# DVC local remote config may hold secret paths (belt-and-suspenders;
+# DVC already ignores .dvc/config.local via .dvc/.gitignore).
+.dvc/config.local
+# Generic keys and certificates
+*.pem
+*.key
+*.p12
+*.pfx
+# MLflow / DagsHub tokens are provided via environment variables (see .env)
+secrets/
+
+# --- MLflow local runs ---
+mlruns/
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+
+# NOTE: data/ and models/ artifacts are versioned by DVC, not Git.
+# DVC generates its own granular .gitignore entries inside those folders.

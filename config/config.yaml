@@ -1,0 +1,15 @@
+# Central project configuration: dataset, paths, and pipeline parameters.
+# Values here are consumed by the source modules to avoid hard-coded paths.
+
+data:
+  # Kaggle dataset slug (owner/dataset-name).
+  kaggle_dataset: "blastchar/telco-customer-churn"
+  # Original CSV file name as published on Kaggle.
+  source_filename: "WA_Fn-UseC_-Telco-Customer-Churn.csv"
+  # Normalized name used throughout the project.
+  raw_filename: "telco_churn.csv"
+  raw_dir: "data/raw"
+  processed_dir: "data/processed"
+
+paths:
+  models_dir: "models"

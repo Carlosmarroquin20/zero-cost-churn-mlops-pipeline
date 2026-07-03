@@ -1,0 +1,13 @@
+[tool.black]
+line-length = 88
+target-version = ["py310"]
+
+[tool.isort]
+profile = "black"
+line_length = 88
+
+[tool.pytest.ini_options]
+# Make the project root importable (so `from src...` works in tests).
+pythonpath = ["."]
+testpaths = ["tests"]
+addopts = "-ra -q"

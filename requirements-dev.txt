@@ -1,0 +1,8 @@
+# Development and code-quality tooling.
+-r requirements.txt
+
+pytest>=7.4
+black>=24.0
+isort>=5.13
+flake8>=7.0
+pre-commit>=3.5
