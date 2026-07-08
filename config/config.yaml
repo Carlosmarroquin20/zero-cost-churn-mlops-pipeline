@@ -13,3 +13,43 @@ data:
 
 paths:
   models_dir: "models"
+
+preprocessing:
+  # Target column and the value that represents the positive (churn) class.
+  target: "Churn"
+  positive_class: "Yes"
+  # Identifier columns to drop (no predictive signal).
+  drop_columns:
+    - "customerID"
+  # Columns stored as text in the raw file that must be coerced to numeric.
+  numeric_coerce_columns:
+    - "TotalCharges"
+  # Train/test split settings.
+  test_size: 0.2
+  random_state: 42
+  stratify: true
+
+features:
+  # Numeric features (standard-scaled at modeling time).
+  numeric:
+    - "tenure"
+    - "MonthlyCharges"
+    - "TotalCharges"
+    - "SeniorCitizen"
+  # Categorical features (one-hot encoded at modeling time).
+  categorical:
+    - "gender"
+    - "Partner"
+    - "Dependents"
+    - "PhoneService"
+    - "MultipleLines"
+    - "InternetService"
+    - "OnlineSecurity"
+    - "OnlineBackup"
+    - "DeviceProtection"
+    - "TechSupport"
+    - "StreamingTV"
+    - "StreamingMovies"
+    - "Contract"
+    - "PaperlessBilling"
+    - "PaymentMethod"

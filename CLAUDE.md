@@ -36,6 +36,11 @@ CI/CD, and a public deployment — all at **strictly $0 cost**.
 - **Kaggle access:** Kaggle API + `kaggle.json` token (reproducible / CI-friendly).
 - **DVC remote auth:** Google Cloud **Service Account** JSON key (works headless in CI).
 - **Hosting leaning:** Hugging Face Spaces over Render (more stable free Docker host).
+- **Preprocessing split:** cleaning + train/test split happen in
+  `data_preprocessing.py`; encoding + scaling live in `features.py` as an
+  unfitted `ColumnTransformer`, fitted on the training split inside the model
+  Pipeline (Phase 3) to prevent data leakage. Processed CSVs are clean but
+  unencoded.
 
 ## 5. Master plan & status
 
@@ -43,7 +48,7 @@ CI/CD, and a public deployment — all at **strictly $0 cost**.
 |---|---|---|
 | 0 | Scaffolding & tooling (git, venv, linters, pre-commit) | ✅ Done |
 | 1 | Data acquisition & DVC + Google Drive | 🟡 Code done; pending user credential steps |
-| 2 | Data validation & preprocessing (Pandera/Pydantic + tests) | ⬜ Not started |
+| 2 | Data validation & preprocessing (Pandera + tests) | ✅ Code done & unit-tested (9 tests pass) |
 | 3 | Training pipeline & MLflow/DagsHub | ⬜ |
 | 4 | DVC pipeline (`dvc.yaml` stages) | ⬜ |
 | 5 | FastAPI inference service | ⬜ |
