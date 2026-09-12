@@ -38,8 +38,10 @@ client_secrets.json
 # MLflow / DagsHub tokens are provided via environment variables (see .env)
 secrets/
 
-# --- MLflow local runs ---
+# --- MLflow local runs (SQLite store and artifacts) ---
 mlruns/
+mlartifacts/
+mlflow.db
 
 # --- OS ---
 .DS_Store
