@@ -1,7 +1,10 @@
 # Development and code-quality tooling.
 -r requirements.txt
+-r requirements-api.txt
 
 pytest>=7.4
+# Required by FastAPI's TestClient.
+httpx>=0.27
 pre-commit>=3.5
 # Pinned to the revisions in .pre-commit-config.yaml so local runs and hooks agree.
 black==26.5.1
