@@ -29,6 +29,10 @@ zero-cost-churn-mlops-pipeline/
 ├── notebooks/                 # Exploratory analysis
 ├── reports/                   # Generated evaluation reports (metrics.json)
 ├── src/
+│   ├── api/
+│   │   ├── main.py            # FastAPI app: health and prediction endpoints
+│   │   └── schemas.py         # Request and response schemas
+│   ├── config.py              # Configuration loading and path helpers
 │   ├── data_ingestion.py      # Download the dataset from Kaggle
 │   ├── data_validation.py     # Pandera data contract for the raw data
 │   ├── data_preprocessing.py  # Clean and split the dataset
@@ -36,11 +40,13 @@ zero-cost-churn-mlops-pipeline/
 │   ├── model.py               # Model pipeline and estimator registry
 │   ├── evaluation.py          # Classification metrics
 │   ├── tracking.py            # MLflow tracking configuration
-│   └── train.py               # Training entry point
+│   ├── train.py               # Training entry point
+│   └── predict.py             # Load the trained model and score customers
 ├── tests/                     # pytest suite
 ├── .env.example               # Template for local environment variables
-├── requirements.txt
-├── requirements-dev.txt
+├── requirements.txt           # Data, training, and tracking dependencies
+├── requirements-api.txt       # Inference API runtime dependencies
+├── requirements-dev.txt       # All of the above plus test and lint tooling
 ├── pyproject.toml
 ├── .pre-commit-config.yaml
 └── README.md
@@ -144,15 +150,64 @@ MLFLOW_TRACKING_USERNAME=<user>
 MLFLOW_TRACKING_PASSWORD=<DAGSHUB_TOKEN>
 ```
 
+## Inference API
+
+The FastAPI service loads `models/model.joblib` at startup and serves churn
+predictions. Start it from the repository root:
+
+```bash
+uvicorn src.api.main:app --reload
+```
+
+Then open <http://localhost:8000/docs> for the interactive documentation.
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/health` | `200` with the model version, or `503` when no model is loaded |
+| `POST` | `/predict` | Score one customer |
+| `POST` | `/predict/batch` | Score up to `api.max_batch_size` customers (1,000 by default) |
+
+Request fields use snake_case names and are validated against the same
+categories as the raw data contract. For example:
+
+```bash
+curl -X POST http://localhost:8000/predict \
+  -H "Content-Type: application/json" \
+  -d '{"gender": "Female", "senior_citizen": 0, "partner": "Yes",
+       "dependents": "No", "tenure": 1, "phone_service": "No",
+       "multiple_lines": "No phone service", "internet_service": "DSL",
+       "online_security": "No", "online_backup": "Yes",
+       "device_protection": "No", "tech_support": "No",
+       "streaming_tv": "No", "streaming_movies": "No",
+       "contract": "Month-to-month", "paperless_billing": "Yes",
+       "payment_method": "Electronic check",
+       "monthly_charges": 29.85, "total_charges": 29.85}'
+```
+
+Example response (values are illustrative):
+
+```json
+{
+  "churn_probability": 0.72,
+  "will_churn": true,
+  "threshold": 0.5,
+  "model_version": "<md5-of-model-file>"
+}
+```
+
+`model_version` is the MD5 hash of the served model file, the same hash DVC
+records for the artifact, so every prediction can be traced back to the exact
+model that produced it.
+
 ## Testing
 
 ```bash
 pytest
 ```
 
-Tests run on seeded synthetic data and a temporary local MLflow store. MLflow
-credentials are removed from the test environment, so no test can reach a
-remote server.
+Tests run on seeded synthetic data, a temporary local MLflow store, and a
+model trained on that synthetic data for the API. MLflow credentials are
+removed from the test environment, so no test can reach a remote server.
 
 ## License
 
