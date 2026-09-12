@@ -1,12 +1,38 @@
 """Shared pytest fixtures for the test suite."""
 
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, List, Tuple
 
+import numpy as np
 import pandas as pd
 import pytest
 
 from src.data_ingestion import load_config
+from src.data_preprocessing import clean_data, split_data
+
+# Allowed values per categorical column, mirroring the raw data contract.
+_CATEGORY_DOMAINS: Dict[str, List[str]] = {
+    "gender": ["Female", "Male"],
+    "Partner": ["Yes", "No"],
+    "Dependents": ["Yes", "No"],
+    "PhoneService": ["Yes", "No"],
+    "MultipleLines": ["Yes", "No", "No phone service"],
+    "InternetService": ["DSL", "Fiber optic", "No"],
+    "OnlineSecurity": ["Yes", "No", "No internet service"],
+    "OnlineBackup": ["Yes", "No", "No internet service"],
+    "DeviceProtection": ["Yes", "No", "No internet service"],
+    "TechSupport": ["Yes", "No", "No internet service"],
+    "StreamingTV": ["Yes", "No", "No internet service"],
+    "StreamingMovies": ["Yes", "No", "No internet service"],
+    "Contract": ["Month-to-month", "One year", "Two year"],
+    "PaperlessBilling": ["Yes", "No"],
+    "PaymentMethod": [
+        "Electronic check",
+        "Mailed check",
+        "Bank transfer (automatic)",
+        "Credit card (automatic)",
+    ],
+}
 
 
 def _make_raw_row(customer_id: str, churn: str, total_charges: str = "100.5") -> dict:
@@ -51,6 +77,41 @@ def raw_df() -> pd.DataFrame:
 
 
 @pytest.fixture
+def synthetic_raw_df() -> pd.DataFrame:
+    """A larger, varied, schema-valid raw dataframe for model training tests.
+
+    Churn is far more likely for month-to-month contracts, which gives models a
+    learnable signal. The generator is seeded, so the data is deterministic.
+    """
+    rng = np.random.default_rng(seed=7)
+    n_rows = 200
+
+    df = pd.DataFrame(
+        {
+            column: rng.choice(values, size=n_rows)
+            for column, values in _CATEGORY_DOMAINS.items()
+        }
+    )
+    df.insert(0, "customerID", [f"SYN-{i:04d}" for i in range(n_rows)])
+    df["SeniorCitizen"] = rng.integers(0, 2, size=n_rows)
+    df["tenure"] = rng.integers(0, 73, size=n_rows)
+    df["MonthlyCharges"] = rng.uniform(18.0, 120.0, size=n_rows).round(2)
+    df["TotalCharges"] = (df["tenure"] * df["MonthlyCharges"]).round(2).astype(str)
+
+    churn_probability = np.where(df["Contract"] == "Month-to-month", 0.7, 0.1)
+    df["Churn"] = np.where(rng.random(n_rows) < churn_probability, "Yes", "No")
+    return df
+
+
+@pytest.fixture
 def config() -> Dict[str, Any]:
     """The real project configuration, so tests validate it as well."""
     return load_config(Path("config/config.yaml"))
+
+
+@pytest.fixture
+def synthetic_splits(
+    synthetic_raw_df: pd.DataFrame, config: Dict[str, Any]
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    """Cleaned train/test splits built with the real preprocessing steps."""
+    return split_data(clean_data(synthetic_raw_df, config), config)

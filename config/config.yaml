@@ -56,3 +56,13 @@ features:
     - "Contract"
     - "PaperlessBilling"
     - "PaymentMethod"
+
+model:
+  # Estimator key from the registry in src/model.py.
+  name: "logistic_regression"
+  # Keyword arguments forwarded to the estimator constructor.
+  params:
+    C: 1.0
+    class_weight: "balanced"
+    max_iter: 1000
+    random_state: 42
