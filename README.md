@@ -1,13 +1,13 @@
 # Zero-Cost Customer Churn MLOps Pipeline
 
 A production-grade, **100% free-tier** Customer Churn Prediction system, built
-end to end with open-source and free tooling: Kaggle, DVC + Google Drive,
-MLflow/DagsHub, FastAPI, Docker, GitHub Actions, and Hugging Face Spaces.
+end to end with open-source and free tooling: Kaggle, DVC with DagsHub Storage,
+MLflow on DagsHub, FastAPI, Docker, GitHub Actions, and Hugging Face Spaces.
 
 ## Architecture (target)
 
 ```
-Kaggle Dataset -> DVC (Google Drive remote) -> Training Pipeline (MLflow/DagsHub)
+Kaggle Dataset -> DVC (DagsHub Storage) -> Training Pipeline (MLflow on DagsHub)
                                                        |
                                                Model artifact
                                                        |
@@ -54,15 +54,19 @@ pip install -r requirements-dev.txt
 pre-commit install
 ```
 
-## Phase 1 — Data acquisition & DVC
+## Data acquisition & versioning
 
 ### 1. Configure Kaggle API credentials
 
-1. Sign in at <https://www.kaggle.com> and go to **Settings → API → Create New Token**.
-2. This downloads a `kaggle.json` file.
+1. Sign in at <https://www.kaggle.com> and open **Settings → API**.
+2. Under **Legacy API Credentials**, click **Create Legacy API Key**. This
+   downloads a `kaggle.json` file.
 3. Place it where the Kaggle client expects it:
    - Windows: `C:\Users\<user>\.kaggle\kaggle.json`
-   - Linux/macOS: `~/.kaggle/kaggle.json`
+   - Linux/macOS: `~/.kaggle/kaggle.json` (then `chmod 600` it)
+
+Alternatively, set `KAGGLE_USERNAME` and `KAGGLE_KEY` in a local `.env` file
+(see `.env.example`).
 
 ### 2. Download the dataset
 
@@ -72,19 +76,22 @@ python -m src.data_ingestion --config config/config.yaml
 
 This stores `data/raw/telco_churn.csv`.
 
-### 3. Track the data with DVC (Google Drive remote)
+### 3. Track the data with DVC (DagsHub Storage)
+
+Every DagsHub repository includes an S3-compatible storage bucket that DVC can
+use as a remote. Create a DagsHub repository and an access token, then run:
 
 ```bash
-dvc init
 dvc add data/raw/telco_churn.csv
-dvc remote add -d gdrive_remote gdrive://<GOOGLE_DRIVE_FOLDER_ID>
-dvc remote modify gdrive_remote gdrive_use_service_account true
-dvc remote modify --local gdrive_remote \
-    gdrive_service_account_json_file_path gdrive-service-account.json
+dvc remote add -d dagshub s3://dvc
+dvc remote modify dagshub endpointurl https://dagshub.com/<user>/<repo>.s3
+dvc remote modify dagshub --local access_key_id <DAGSHUB_TOKEN>
+dvc remote modify dagshub --local secret_access_key <DAGSHUB_TOKEN>
 dvc push
 ```
 
-> The service-account JSON file is a secret and is ignored by Git.
+> Always pass `--local` for credentials: it writes them to `.dvc/config.local`,
+> which Git ignores. Only the endpoint URL belongs in `.dvc/config`.
 
 ## Testing
 
