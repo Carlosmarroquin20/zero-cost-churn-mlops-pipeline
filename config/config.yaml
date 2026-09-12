@@ -10,6 +10,9 @@ data:
   raw_filename: "telco_churn.csv"
   raw_dir: "data/raw"
   processed_dir: "data/processed"
+  # File names of the processed train/test splits inside processed_dir.
+  train_filename: "train.csv"
+  test_filename: "test.csv"
 
 paths:
   models_dir: "models"

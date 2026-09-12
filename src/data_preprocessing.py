@@ -88,6 +88,23 @@ def split_data(
     return train_df, test_df
 
 
+def get_split_paths(config: Dict[str, Any]) -> Tuple[Path, Path]:
+    """Resolve where the processed train/test splits are stored.
+
+    Args:
+        config: Parsed project configuration.
+
+    Returns:
+        A ``(train_path, test_path)`` tuple.
+    """
+    data_cfg = config["data"]
+    processed_dir = Path(data_cfg["processed_dir"])
+    return (
+        processed_dir / data_cfg["train_filename"],
+        processed_dir / data_cfg["test_filename"],
+    )
+
+
 def run(config: Dict[str, Any]) -> Tuple[Path, Path]:
     """Execute the full preprocessing step end to end.
 
@@ -110,10 +127,8 @@ def run(config: Dict[str, Any]) -> Tuple[Path, Path]:
     cleaned_df = clean_data(raw_df, config)
     train_df, test_df = split_data(cleaned_df, config)
 
-    processed_dir = Path(data_cfg["processed_dir"])
-    processed_dir.mkdir(parents=True, exist_ok=True)
-    train_path = processed_dir / "train.csv"
-    test_path = processed_dir / "test.csv"
+    Path(data_cfg["processed_dir"]).mkdir(parents=True, exist_ok=True)
+    train_path, test_path = get_split_paths(config)
 
     train_df.to_csv(train_path, index=False)
     test_df.to_csv(test_path, index=False)

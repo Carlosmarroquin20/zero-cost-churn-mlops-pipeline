@@ -1,10 +1,11 @@
 """Unit tests for the data preprocessing module."""
 
+from pathlib import Path
 from typing import Any, Dict
 
 import pandas as pd
 
-from src.data_preprocessing import clean_data, split_data
+from src.data_preprocessing import clean_data, get_split_paths, run, split_data
 
 
 def test_clean_data_drops_identifier(
@@ -44,3 +45,22 @@ def test_split_data_preserves_rows_and_classes(
     assert not train_df.empty
     assert not test_df.empty
     assert set(train_df[config["preprocessing"]["target"]].unique()) == {0, 1}
+
+
+def test_run_writes_processed_splits(
+    tmp_path: Path, raw_df: pd.DataFrame, config: Dict[str, Any]
+) -> None:
+    """The entry point should persist both splits at the configured paths."""
+    raw_dir = tmp_path / "raw"
+    raw_dir.mkdir()
+    raw_df.to_csv(raw_dir / config["data"]["raw_filename"], index=False)
+    config["data"]["raw_dir"] = str(raw_dir)
+    config["data"]["processed_dir"] = str(tmp_path / "processed")
+
+    train_path, test_path = run(config)
+
+    assert (train_path, test_path) == get_split_paths(config)
+    train_df = pd.read_csv(train_path)
+    test_df = pd.read_csv(test_path)
+    assert len(train_df) + len(test_df) == len(raw_df)
+    assert "customerID" not in train_df.columns
