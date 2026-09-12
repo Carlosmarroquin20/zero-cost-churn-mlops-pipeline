@@ -83,3 +83,7 @@ mlflow:
   experiment_name: "telco-churn"
   # Local fallback used when MLFLOW_TRACKING_URI is not set in the environment.
   tracking_uri: "sqlite:///mlflow.db"
+
+api:
+  # Maximum number of customers accepted by the batch prediction endpoint.
+  max_batch_size: 1000
