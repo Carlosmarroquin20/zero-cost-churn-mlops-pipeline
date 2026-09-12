@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any, Dict
 
 import yaml
+from dotenv import load_dotenv
 
 logging.basicConfig(
     level=logging.INFO,
@@ -97,6 +98,9 @@ def main() -> None:
     )
     args = parser.parse_args()
 
+    # Kaggle credentials may come from a local, git-ignored .env file. Variables
+    # already set in the environment (for example, CI secrets) take precedence.
+    load_dotenv()
     config = load_config(args.config)
     download_dataset(config)
 

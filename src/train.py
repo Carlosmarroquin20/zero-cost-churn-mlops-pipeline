@@ -19,6 +19,7 @@ from typing import Any, Dict, Tuple
 import joblib
 import mlflow
 import pandas as pd
+from dotenv import load_dotenv
 from sklearn.model_selection import StratifiedKFold, cross_val_score
 from sklearn.pipeline import Pipeline
 
@@ -211,6 +212,9 @@ def main() -> None:
     )
     args = parser.parse_args()
 
+    # MLflow tracking settings may come from a local, git-ignored .env file.
+    # Variables already set in the environment (for example, CI secrets) win.
+    load_dotenv()
     config = load_config(args.config)
     run(config)
 
