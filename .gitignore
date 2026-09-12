@@ -45,5 +45,17 @@ mlruns/
 .DS_Store
 Thumbs.db
 
-# NOTE: data/ and models/ artifacts are versioned by DVC, not Git.
-# DVC generates its own granular .gitignore entries inside those folders.
+# --- Data & model artifacts (versioned by DVC, never by Git) ---
+# Ignore everything under data/ and models/ except directory placeholders and
+# DVC metadata, so generated artifacts cannot be committed by accident before
+# (or without) being tracked by DVC.
+/data/**
+!/data/**/
+!/data/**/.gitkeep
+!/data/**/.gitignore
+!/data/**/*.dvc
+/models/**
+!/models/**/
+!/models/**/.gitkeep
+!/models/**/.gitignore
+!/models/**/*.dvc
