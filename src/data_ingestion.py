@@ -16,27 +16,15 @@ import shutil
 from pathlib import Path
 from typing import Any, Dict
 
-import yaml
 from dotenv import load_dotenv
+
+from src.config import DEFAULT_CONFIG_PATH, load_config
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
 )
 logger = logging.getLogger(__name__)
-
-
-def load_config(config_path: Path) -> Dict[str, Any]:
-    """Load and parse the YAML configuration file.
-
-    Args:
-        config_path: Path to the YAML configuration file.
-
-    Returns:
-        The parsed configuration as a dictionary.
-    """
-    with config_path.open("r", encoding="utf-8") as file:
-        return yaml.safe_load(file)
 
 
 def download_dataset(config: Dict[str, Any]) -> Path:
@@ -93,7 +81,7 @@ def main() -> None:
     parser.add_argument(
         "--config",
         type=Path,
-        default=Path("config/config.yaml"),
+        default=DEFAULT_CONFIG_PATH,
         help="Path to the YAML configuration file.",
     )
     args = parser.parse_args()

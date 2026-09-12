@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from src.data_ingestion import load_config
+from src.config import DEFAULT_CONFIG_PATH, load_config
 from src.data_preprocessing import clean_data, split_data
 
 # Environment variables that could route test runs to a real MLflow server.
@@ -121,7 +121,7 @@ def synthetic_raw_df() -> pd.DataFrame:
 @pytest.fixture
 def config() -> Dict[str, Any]:
     """The real project configuration, so tests validate it as well."""
-    return load_config(Path("config/config.yaml"))
+    return load_config(DEFAULT_CONFIG_PATH)
 
 
 @pytest.fixture

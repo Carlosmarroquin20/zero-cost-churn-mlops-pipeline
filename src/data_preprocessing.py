@@ -19,7 +19,7 @@ from typing import Any, Dict, Tuple
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-from src.data_ingestion import load_config
+from src.config import DEFAULT_CONFIG_PATH, load_config
 from src.data_validation import validate_raw_data
 
 logging.basicConfig(
@@ -144,7 +144,7 @@ def main() -> None:
     parser.add_argument(
         "--config",
         type=Path,
-        default=Path("config/config.yaml"),
+        default=DEFAULT_CONFIG_PATH,
         help="Path to the YAML configuration file.",
     )
     args = parser.parse_args()

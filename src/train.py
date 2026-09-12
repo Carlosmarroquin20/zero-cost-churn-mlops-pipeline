@@ -23,7 +23,7 @@ from dotenv import load_dotenv
 from sklearn.model_selection import StratifiedKFold, cross_val_score
 from sklearn.pipeline import Pipeline
 
-from src.data_ingestion import load_config
+from src.config import DEFAULT_CONFIG_PATH, load_config
 from src.data_preprocessing import get_split_paths
 from src.evaluation import compute_classification_metrics
 from src.model import build_model
@@ -207,7 +207,7 @@ def main() -> None:
     parser.add_argument(
         "--config",
         type=Path,
-        default=Path("config/config.yaml"),
+        default=DEFAULT_CONFIG_PATH,
         help="Path to the YAML configuration file.",
     )
     args = parser.parse_args()
