@@ -3,13 +3,15 @@
 from pathlib import Path
 from typing import Any, Dict, Iterator, List, Tuple
 
+import joblib
 import mlflow
 import numpy as np
 import pandas as pd
 import pytest
 
-from src.config import DEFAULT_CONFIG_PATH, load_config
+from src.config import DEFAULT_CONFIG_PATH, get_model_path, load_config
 from src.data_preprocessing import clean_data, split_data
+from src.model import build_model
 
 # Environment variables that could route test runs to a real MLflow server.
 _MLFLOW_ENV_VARS: Tuple[str, ...] = (
@@ -148,3 +150,26 @@ def synthetic_splits(
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """Cleaned train/test splits built with the real preprocessing steps."""
     return split_data(clean_data(synthetic_raw_df, config), config)
+
+
+@pytest.fixture
+def trained_model_config(
+    config: Dict[str, Any],
+    tmp_path: Path,
+    synthetic_splits: Tuple[pd.DataFrame, pd.DataFrame],
+) -> Dict[str, Any]:
+    """Configuration pointing to a model trained on the synthetic data.
+
+    The model is built with the real model factory and saved under ``tmp_path``,
+    so prediction and API tests never need the real dataset.
+    """
+    train_df, _ = synthetic_splits
+    target = config["preprocessing"]["target"]
+    model = build_model(config)
+    model.fit(train_df.drop(columns=[target]), train_df[target])
+
+    config["paths"]["models_dir"] = str(tmp_path / "models")
+    model_path = get_model_path(config)
+    model_path.parent.mkdir(parents=True)
+    joblib.dump(model, model_path)
+    return config

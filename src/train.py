@@ -23,7 +23,7 @@ from dotenv import load_dotenv
 from sklearn.model_selection import StratifiedKFold, cross_val_score
 from sklearn.pipeline import Pipeline
 
-from src.config import DEFAULT_CONFIG_PATH, load_config
+from src.config import DEFAULT_CONFIG_PATH, get_model_path, load_config
 from src.data_preprocessing import get_split_paths
 from src.evaluation import compute_classification_metrics
 from src.model import build_model
@@ -133,9 +133,7 @@ def save_outputs(
     Returns:
         A ``(model_path, metrics_path)`` tuple of the written files.
     """
-    model_path = (
-        Path(config["paths"]["models_dir"]) / config["model"]["artifact_filename"]
-    )
+    model_path = get_model_path(config)
     metrics_path = (
         Path(config["paths"]["reports_dir"]) / config["training"]["metrics_filename"]
     )

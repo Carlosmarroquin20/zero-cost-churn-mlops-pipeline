@@ -25,3 +25,15 @@ def load_config(config_path: Path = DEFAULT_CONFIG_PATH) -> Dict[str, Any]:
     """
     with config_path.open("r", encoding="utf-8") as file:
         return yaml.safe_load(file)
+
+
+def get_model_path(config: Dict[str, Any]) -> Path:
+    """Resolve where the trained model artifact is stored.
+
+    Args:
+        config: Parsed project configuration.
+
+    Returns:
+        Path to the serialized model pipeline.
+    """
+    return Path(config["paths"]["models_dir"]) / config["model"]["artifact_filename"]
