@@ -1,14 +1,22 @@
 """Shared pytest fixtures for the test suite."""
 
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, Iterator, List, Tuple
 
+import mlflow
 import numpy as np
 import pandas as pd
 import pytest
 
 from src.data_ingestion import load_config
 from src.data_preprocessing import clean_data, split_data
+
+# Environment variables that could route test runs to a real MLflow server.
+_MLFLOW_ENV_VARS: Tuple[str, ...] = (
+    "MLFLOW_TRACKING_URI",
+    "MLFLOW_TRACKING_USERNAME",
+    "MLFLOW_TRACKING_PASSWORD",
+)
 
 # Allowed values per categorical column, mirroring the raw data contract.
 _CATEGORY_DOMAINS: Dict[str, List[str]] = {
@@ -33,6 +41,13 @@ _CATEGORY_DOMAINS: Dict[str, List[str]] = {
         "Credit card (automatic)",
     ],
 }
+
+
+@pytest.fixture(autouse=True)
+def _isolate_mlflow_credentials(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Keep every test away from real MLflow servers and credentials."""
+    for name in _MLFLOW_ENV_VARS:
+        monkeypatch.delenv(name, raising=False)
 
 
 def _make_raw_row(customer_id: str, churn: str, total_charges: str = "100.5") -> dict:
@@ -107,6 +122,24 @@ def synthetic_raw_df() -> pd.DataFrame:
 def config() -> Dict[str, Any]:
     """The real project configuration, so tests validate it as well."""
     return load_config(Path("config/config.yaml"))
+
+
+@pytest.fixture
+def local_tracking_config(
+    config: Dict[str, Any], tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> Iterator[Dict[str, Any]]:
+    """Configuration that records MLflow runs in a temporary local store.
+
+    The working directory moves to ``tmp_path`` because MLflow stores local
+    artifacts relative to it, which also keeps relative output paths from the
+    configuration inside the temporary directory. MLflow exports the tracking
+    URI to the environment, so its global state is reset afterwards.
+    """
+    monkeypatch.chdir(tmp_path)
+    db_path = (tmp_path / "mlflow.db").as_posix()
+    config["mlflow"]["tracking_uri"] = f"sqlite:///{db_path}"
+    yield config
+    mlflow.set_tracking_uri(None)
 
 
 @pytest.fixture

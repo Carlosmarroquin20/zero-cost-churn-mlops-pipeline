@@ -66,3 +66,8 @@ model:
     class_weight: "balanced"
     max_iter: 1000
     random_state: 42
+
+mlflow:
+  experiment_name: "telco-churn"
+  # Local fallback used when MLFLOW_TRACKING_URI is not set in the environment.
+  tracking_uri: "sqlite:///mlflow.db"
