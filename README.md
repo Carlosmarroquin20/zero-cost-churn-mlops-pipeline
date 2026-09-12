@@ -21,17 +21,24 @@ GitHub Actions (CI/CD) -> Tests + Validation -> Docker -> Hugging Face Spaces
 ```
 zero-cost-churn-mlops-pipeline/
 ├── config/
-│   └── config.yaml          # Dataset, paths, and pipeline parameters
-├── data/                    # DVC-tracked (ignored by Git)
+│   └── config.yaml            # Dataset, paths, model, and tracking settings
+├── data/                      # DVC-tracked (ignored by Git)
 │   ├── raw/
 │   └── processed/
-├── models/                  # DVC-tracked model artifacts
-├── notebooks/               # Exploratory analysis
+├── models/                    # Trained model artifacts (ignored by Git)
+├── notebooks/                 # Exploratory analysis
+├── reports/                   # Generated evaluation reports (metrics.json)
 ├── src/
-│   ├── __init__.py
-│   └── data_ingestion.py    # Download the dataset from Kaggle
-├── tests/
-│   └── test_data_ingestion.py
+│   ├── data_ingestion.py      # Download the dataset from Kaggle
+│   ├── data_validation.py     # Pandera data contract for the raw data
+│   ├── data_preprocessing.py  # Clean and split the dataset
+│   ├── features.py            # Feature preprocessing transformer
+│   ├── model.py               # Model pipeline and estimator registry
+│   ├── evaluation.py          # Classification metrics
+│   ├── tracking.py            # MLflow tracking configuration
+│   └── train.py               # Training entry point
+├── tests/                     # pytest suite
+├── .env.example               # Template for local environment variables
 ├── requirements.txt
 ├── requirements-dev.txt
 ├── pyproject.toml
@@ -52,6 +59,9 @@ pip install -r requirements-dev.txt
 
 # 3. Install the pre-commit hooks
 pre-commit install
+
+# 4. (Optional) Create a local .env for credentials; it is ignored by Git
+cp .env.example .env
 ```
 
 ## Data acquisition & versioning
@@ -93,11 +103,56 @@ dvc push
 > Always pass `--local` for credentials: it writes them to `.dvc/config.local`,
 > which Git ignores. Only the endpoint URL belongs in `.dvc/config`.
 
+## Preprocessing
+
+```bash
+python -m src.data_preprocessing --config config/config.yaml
+```
+
+This validates the raw data against the Pandera contract, cleans it, and writes
+stratified `train.csv` and `test.csv` splits to `data/processed/`. Encoding and
+scaling happen later, inside the model pipeline, to prevent data leakage.
+
+## Training & experiment tracking
+
+```bash
+python -m src.train --config config/config.yaml
+```
+
+The training step:
+
+1. Builds a scikit-learn `Pipeline` with the feature preprocessor and the
+   classifier set in `config.yaml` (logistic regression by default).
+2. Runs stratified k-fold cross-validation on the training split.
+3. Fits the model and evaluates it on the test split (ROC AUC, average
+   precision, precision, recall, F1, and accuracy).
+4. Saves `models/model.joblib` and `reports/metrics.json`.
+5. Records the parameters, metrics, and both files in MLflow.
+
+By default, runs are stored locally in `mlflow.db` (SQLite). Browse them with:
+
+```bash
+mlflow ui --backend-store-uri sqlite:///mlflow.db
+```
+
+To log runs to the MLflow server included with your DagsHub repository instead,
+set these variables in `.env` (or as CI secrets):
+
+```ini
+MLFLOW_TRACKING_URI=https://dagshub.com/<user>/<repo>.mlflow
+MLFLOW_TRACKING_USERNAME=<user>
+MLFLOW_TRACKING_PASSWORD=<DAGSHUB_TOKEN>
+```
+
 ## Testing
 
 ```bash
 pytest
 ```
+
+Tests run on seeded synthetic data and a temporary local MLflow store. MLflow
+credentials are removed from the test environment, so no test can reach a
+remote server.
 
 ## License
 
