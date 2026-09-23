@@ -1,22 +1,14 @@
 # Keep the build context small and never ship secrets, data, or local tooling.
-.git/
-.gitattributes
-.gitignore
-.github/
-.dvc/
-.dvcignore
-.venv/
-.claude/
-.pytest_cache/
-**/__pycache__/
-*.py[cod]
 
-# Credentials and local environment files.
-.env*
+# Everything hidden at the root: version control, virtual environments, caches,
+# tool configuration, and local environment files.
+.*
+
+# Credentials that are not hidden files.
 *.pem
 *.key
 
-# Data, experiments, and reports are versioned outside the image.
+# Data, experiments, and reports live outside the image.
 data/
 reports/
 notebooks/
@@ -29,6 +21,6 @@ tests/
 *.md
 requirements.txt
 requirements-dev.txt
-.pre-commit-config.yaml
-.flake8
 pyproject.toml
+**/__pycache__/
+*.py[cod]
