@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+# Only the latest run per branch is useful; cancelling the rest saves free minutes.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  MLFLOW_DISABLE_AGENT_HINT: "1"
+
+jobs:
+  quality:
+    name: Lint and tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          # Matches the version that trains and serves the model.
+          python-version: "3.10"
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-api.txt
+            requirements-dev.txt
+
+      - name: Install dependencies
+        run: pip install --requirement requirements-dev.txt
+
+      - name: Check formatting
+        run: |
+          black --check src tests
+          isort --check-only src tests
+
+      - name: Lint
+        run: flake8 src tests
+
+      - name: Run tests
+        run: pytest
