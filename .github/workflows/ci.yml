@@ -48,3 +48,48 @@ jobs:
 
       - name: Run tests
         run: pytest
+
+  image:
+    name: Serving image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v7
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build the serving image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: false
+          load: true
+          tags: churn-api:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Start the container
+        run: docker run --detach --name churn-api --publish 8000:8000 churn-api:ci
+
+      - name: Wait for the API to accept requests
+        run: >
+          curl --silent --show-error --fail --retry 30 --retry-delay 1
+          --retry-all-errors --retry-connrefused --output /dev/null
+          http://localhost:8000/docs
+
+      - name: Report unavailable while no model is shipped
+        run: |
+          status=$(curl --silent --output response.json --write-out '%{http_code}' \
+            http://localhost:8000/health)
+          cat response.json
+          test "$status" = "503"
+          grep -q '"model_loaded":false' response.json
+
+      - name: Show the container logs
+        if: always()
+        run: docker logs churn-api || true
+
+      - name: Stop the container
+        if: always()
+        run: docker rm --force churn-api || true
