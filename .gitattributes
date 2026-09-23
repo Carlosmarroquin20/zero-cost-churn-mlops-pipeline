@@ -1,0 +1,8 @@
+# Normalize line endings: LF in the repository and in working trees, so files
+# copied into Linux containers or checked out by CI behave exactly as they do
+# locally on Windows.
+* text=auto eol=lf
+
+# Serialized artifacts must never be converted.
+*.joblib binary
+*.pkl binary

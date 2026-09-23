@@ -1,0 +1,26 @@
+# Keep the build context small and never ship secrets, data, or local tooling.
+
+# Everything hidden at the root: version control, virtual environments, caches,
+# tool configuration, and local environment files.
+.*
+
+# Credentials that are not hidden files.
+*.pem
+*.key
+
+# Data, experiments, and reports live outside the image.
+data/
+reports/
+notebooks/
+mlruns/
+mlartifacts/
+mlflow.db
+
+# Development-only files.
+tests/
+*.md
+requirements.txt
+requirements-dev.txt
+pyproject.toml
+**/__pycache__/
+*.py[cod]

@@ -10,9 +10,14 @@ data:
   raw_filename: "telco_churn.csv"
   raw_dir: "data/raw"
   processed_dir: "data/processed"
+  # File names of the processed train/test splits inside processed_dir.
+  train_filename: "train.csv"
+  test_filename: "test.csv"
 
 paths:
   models_dir: "models"
+  # Evaluation reports (for example, metrics.json).
+  reports_dir: "reports"
 
 preprocessing:
   # Target column and the value that represents the positive (churn) class.
@@ -53,3 +58,32 @@ features:
     - "Contract"
     - "PaperlessBilling"
     - "PaymentMethod"
+
+model:
+  # Estimator key from the registry in src/model.py.
+  name: "logistic_regression"
+  # Keyword arguments forwarded to the estimator constructor.
+  params:
+    C: 1.0
+    class_weight: "balanced"
+    max_iter: 1000
+    random_state: 42
+  # File name of the serialized scikit-learn Pipeline inside models_dir.
+  artifact_filename: "model.joblib"
+
+training:
+  # Probability cut-off used to turn churn scores into class labels.
+  decision_threshold: 0.5
+  # Stratified k-fold cross-validation on the training split (below 2 disables it).
+  cv_folds: 5
+  # File name of the metrics report written inside reports_dir.
+  metrics_filename: "metrics.json"
+
+mlflow:
+  experiment_name: "telco-churn"
+  # Local fallback used when MLFLOW_TRACKING_URI is not set in the environment.
+  tracking_uri: "sqlite:///mlflow.db"
+
+api:
+  # Maximum number of customers accepted by the batch prediction endpoint.
+  max_batch_size: 1000

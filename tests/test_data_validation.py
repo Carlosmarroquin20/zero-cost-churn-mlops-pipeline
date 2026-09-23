@@ -13,6 +13,14 @@ def test_valid_raw_data_passes(raw_df: pd.DataFrame) -> None:
     assert len(result) == len(raw_df)
 
 
+def test_synthetic_training_data_matches_contract(
+    synthetic_raw_df: pd.DataFrame,
+) -> None:
+    """The synthetic fixture used by model tests must honour the raw contract."""
+    result = validate_raw_data(synthetic_raw_df)
+    assert len(result) == len(synthetic_raw_df)
+
+
 def test_unexpected_category_is_rejected(raw_df: pd.DataFrame) -> None:
     """An out-of-domain categorical value must fail validation."""
     corrupted = raw_df.copy()

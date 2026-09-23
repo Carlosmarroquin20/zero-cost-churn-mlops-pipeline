@@ -1,0 +1,15 @@
+# Runtime dependencies of the inference API. Training, tracking, and data
+# versioning tools (MLflow, DVC, Kaggle, Pandera) are deliberately excluded so
+# the serving image stays small.
+#
+# Versions are pinned because the served model is a pickle: loading it with a
+# different scikit-learn, numpy, or joblib build is unsupported. Upgrade these
+# pins and retrain the model together (tests/test_serving_environment.py keeps
+# the development environment aligned with them).
+fastapi==0.141.1
+uvicorn[standard]==0.52.4
+pandas==2.3.3
+numpy==2.2.6
+scikit-learn==1.7.2
+joblib==1.5.3
+pyyaml==6.0.3
