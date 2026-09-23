@@ -1,0 +1,34 @@
+# Keep the build context small and never ship secrets, data, or local tooling.
+.git/
+.gitattributes
+.gitignore
+.github/
+.dvc/
+.dvcignore
+.venv/
+.claude/
+.pytest_cache/
+**/__pycache__/
+*.py[cod]
+
+# Credentials and local environment files.
+.env*
+*.pem
+*.key
+
+# Data, experiments, and reports are versioned outside the image.
+data/
+reports/
+notebooks/
+mlruns/
+mlartifacts/
+mlflow.db
+
+# Development-only files.
+tests/
+*.md
+requirements.txt
+requirements-dev.txt
+.pre-commit-config.yaml
+.flake8
+pyproject.toml
