@@ -1,5 +1,7 @@
 # Zero-Cost Customer Churn MLOps Pipeline
 
+[![CI](https://github.com/Carlosmarroquin20/zero-cost-churn-mlops-pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/Carlosmarroquin20/zero-cost-churn-mlops-pipeline/actions/workflows/ci.yml)
+
 A production-grade, **100% free-tier** Customer Churn Prediction system, built
 end to end with open-source and free tooling: Kaggle, DVC with DagsHub Storage,
 MLflow on DagsHub, FastAPI, Docker, GitHub Actions, and Hugging Face Spaces.
@@ -44,6 +46,7 @@ zero-cost-churn-mlops-pipeline/
 │   └── predict.py             # Load the trained model and score customers
 ├── tests/                     # pytest suite
 ├── .env.example               # Template for local environment variables
+├── .github/workflows/ci.yml   # Lint, tests, and image build on every PR
 ├── Dockerfile                 # Serving image for the inference API
 ├── requirements.txt           # Data, training, and tracking dependencies
 ├── requirements-api.txt       # Inference API runtime dependencies
@@ -227,6 +230,19 @@ Notes:
 - The container runs as an unprivileged user (UID 1000).
 - Serving dependency versions are pinned in `requirements-api.txt` because the
   model is a pickle: it must be loaded with the libraries that produced it.
+
+## Continuous integration
+
+Every pull request, and every push to `master`, runs
+[the CI workflow](.github/workflows/ci.yml):
+
+| Job | What it does |
+|---|---|
+| Lint and tests | black, isort, and flake8 over `src` and `tests`, then the pytest suite on Python 3.10 |
+| Serving image | Builds the Docker image, starts the container, and checks that it answers on `/health` |
+
+A new commit on the same branch cancels the previous run, which keeps the free
+GitHub Actions minutes for the runs that matter.
 
 ## Testing
 
