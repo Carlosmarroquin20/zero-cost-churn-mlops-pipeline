@@ -44,6 +44,7 @@ zero-cost-churn-mlops-pipeline/
 │   └── predict.py             # Load the trained model and score customers
 ├── tests/                     # pytest suite
 ├── .env.example               # Template for local environment variables
+├── Dockerfile                 # Serving image for the inference API
 ├── requirements.txt           # Data, training, and tracking dependencies
 ├── requirements-api.txt       # Inference API runtime dependencies
 ├── requirements-dev.txt       # All of the above plus test and lint tooling
@@ -198,6 +199,34 @@ Example response (values are illustrative):
 `model_version` is the MD5 hash of the served model file, the same hash DVC
 records for the artifact, so every prediction can be traced back to the exact
 model that produced it.
+
+## Container
+
+The image contains only the API runtime: the serving requirements, the source
+code, the configuration, and the model directory. Training, tracking, and data
+versioning tools stay out of it.
+
+```bash
+docker build -t churn-api:local .
+```
+
+```bash
+docker run --rm -p 8000:8000 churn-api:local
+```
+
+The API is then available at <http://localhost:8000/docs>.
+
+Notes:
+
+- `models/` is copied as it is. Build after training to ship a model, or build
+  without one: the container still starts and reports itself as unavailable
+  until a model is mounted, for example with
+  `-v "$(pwd)/models:/app/models:ro"`.
+- The listening port comes from the `PORT` environment variable (8000 by
+  default), which is what hosting platforms such as Hugging Face Spaces need.
+- The container runs as an unprivileged user (UID 1000).
+- Serving dependency versions are pinned in `requirements-api.txt` because the
+  model is a pickle: it must be loaded with the libraries that produced it.
 
 ## Testing
 
